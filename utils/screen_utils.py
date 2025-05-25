@@ -7,9 +7,10 @@ import numpy as np
 import pytesseract
 from PIL import Image
 
-from config import WAIT_POLL, WAIT_TIMEOUT
+from config import DEVICE_ID, SLEEP_TIME, WAIT_POLL, WAIT_TIMEOUT
+from utils.adb_utils import PressBack, Tap
 
-device_id = '127.0.0.1:5555'
+device_id = DEVICE_ID
 
 def GetScreenshot():
     result = subprocess.run(['adb', '-s', device_id, 'exec-out', 'screencap', '-p'], capture_output=True)
@@ -134,3 +135,27 @@ def FindAllTemplates(screen_img, templates: dict, threshold=0.85, use_gray=True)
             matches.append({ "type": label, "coords": center })
 
     return matches
+
+def TapWithRetry(image, label, retries=3):
+    fallback_keywords = ["tap anywhere to exit", "anywhere", "exit", "rewards", "victory"]
+    for attempt in range(1, retries + 1):
+        coords = FindOnScreen(image)
+        if coords:
+            print(f"{label} found on attempt {attempt}, tapping...")
+            Tap(*coords)
+            time.sleep(SLEEP_TIME)
+            return True
+        else:
+            print(f"{label} not found (attempt {attempt}), retrying...")
+            PressBack()
+            time.sleep(SLEEP_TIME)
+    print(f"Failed to find {label} after {retries} attempts.")
+    return False
+
+def ScreenHasText(keywords: list, screenshot=None) -> bool:
+    if not screenshot:
+        screenshot = GetScreenshot()
+
+    text = ExtractText(screenshot)
+    return any(word.lower() in text for word in keywords)
+

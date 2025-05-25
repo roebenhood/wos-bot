@@ -11,13 +11,16 @@ btn_attack_go = "images/btn_attack_go.png"
 btn_deploy_rss = "images/btn_deploy_rss.png"
 btn_deploy_monster = "images/btn_deploy_monster.png"
 btn_rally = "images/btn_rally.png"
+btn_hold_rally = "images/btn_hold_rally.png"
 btn_explore_fight = "images/btn_explore_fight.png"
 btn_lighthouse = "images/btn_lighthouse.png"
-btn_explore_quick_deploy = "images/btn_explore_quick_deploy.png"
+btn_quick_deploy = "images/btn_quick_deploy.png"
 
 
 dialog_quit = "images/dialog_quit.png"
 
+screen_intel = "images/screen_intel.png"
+lbl_marching = "images/lbl_marching.png"
 
 rss_meat = "images/rss_meat.png"
 rss_wood = "images/rss_wood.png"
