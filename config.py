@@ -1,6 +1,6 @@
 SLEEP_TIME = 3          # Time delay between actions (seconds)
 MAX_ATTEMPTS = 5       # Max retries for closing popups
-DEVICE_ID = "emulator-5554"  # Your emulator/device ID
+DEVICE_ID = "emulator-5556"  # Your emulator/device ID
 PACKAGE_NAME = "com.gof.global"
 WAIT_TIMEOUT = 30
 WAIT_POLL = 0.5

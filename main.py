@@ -1,12 +1,24 @@
-import time
-from bot_actions import CheckIntelTasks, FarmResource, SendTroops
-from utils.actions import ClearStack, SwitchView
-from utils.adb_utils import OpenApp, Swipe, Tap
-from utils.screen_utils import CountMatches, FindOnScreen, GetScreenshot
-from utils import image_paths as img
+from BotActions import RunIntelTaskCycle
+from ClaimRewards import ClaimExplorationIdelRewards
+
 
 
 # CheckIntelTasks()
+# GoToIntelScreen()
+# CheckIntelTasks()
+# ClaimIntelRewards()
+
+# RunIntelTaskCycle()
+
+ClaimExplorationIdelRewards()
+
+# screen = GetScreenshot()
+# # Extract text from the screenshot
+# text = ExtractText(screen)
+
+# # Print the extracted text
+# print("Extracted Text: ", ExtractText(GetScreenshot()))
+
 
 # SendTroops("monster")
 # SwitchView("world")

@@ -37,7 +37,11 @@ opt_60min = "images/option_60min.png"
 
 msg_tap_to_exit = "images/msg_tap_to_exit.png"
 
+btn_exploration_claim = "images/btn_exploration_claim.png"
+btn_exploration_claimed = "images/btn_exploration_claimed.png"
+btn_exploration_idle_rewards = "images/btn_exploration_idle_rewards.png"
 
+lh_no_tasks = "images/lh_no_tasks.png"
 lh_rescue1 = "images/lh_rescue1.png"
 lh_rescue2 = "images/lh_rescue2.png"
 # lh_rescue3 = "images/lh_rescue3.png"

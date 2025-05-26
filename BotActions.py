@@ -2,7 +2,7 @@ import time
 from config import MAX_ATTEMPTS, SLEEP_TIME
 from utils.actions import ClearStack, SwitchView
 from utils.adb_utils import PressBack, Swipe, Tap
-from utils.screen_utils import CountMatches, FindAllTemplates, FindOnScreen, FindTemplate, GetScreenshot, ScreenHasText, TapWithRetry, WaitForImage
+from utils.screen_utils import CountMatches, DetectNewTasks, FindAllTemplates, FindOnScreen, FindTemplate, GetScreenshot, ScreenHasText, TapWithRetry, WaitForImage
 from utils import image_paths as img
 
 def FarmResource(resource_key):
@@ -171,40 +171,27 @@ def RunIntelTaskCycle():
 
     SwitchView("world")
 
-
-# def CheckIntelTasks():
-#     screen = GetScreenshot()
-#     taskList = FindAllTemplates(screen, img.lh_tasks, threshold=0.7)
-
-#     if not taskList:
-#         print("No intel tasks found.")
-#         return []
-
-#     for task in taskList:
-#         print(f"Found task: {task['type']} at {task['coords']}")
-#     return taskList
-
-def CheckIntelTasks(max_attempts=5, delay=0.3):
+def CheckIntelTasks(baseline_path=img.lh_no_tasks, max_attempts=5, delay=0.3):
     for attempt in range(1, max_attempts + 1):
-        screen = GetScreenshot()
-        taskList = FindAllTemplates(screen, img.lh_tasks, threshold=0.85)
+        print(f"Attempt {attempt}: Checking for new tasks...")
+        tasks = DetectNewTasks(baseline_path)
 
-        if taskList:
-            print(f"Tasks found on attempt {attempt}")
-            for task in taskList:
-                print(f"Found task: {task['type']} at {task['coords']}")
-            return taskList
+        if tasks:
+            for (x, y) in tasks:
+                print(f"Found new task at ({x}, {y})")
+            return tasks
         else:
-            print(f"No tasks found (attempt {attempt}), retrying...")
+            print("No tasks found, retrying...")
             time.sleep(delay)
 
-    print("📭 No intel tasks found after multiple attempts.")
+    print("No intel tasks found after multiple attempts.")
     return []
+
 
 
 def PerformIntelTasks(taskList):
     for task in taskList:
-        x, y = task['coords']
+        x, y = task
         Tap(x, y)
         time.sleep(SLEEP_TIME)
 
@@ -214,12 +201,13 @@ def PerformIntelTasks(taskList):
                 print(f"View task button found on attempt {findAttempt}, tapping...")
                 Tap(*btnView)
                 time.sleep(5)
+                taskType = IdentifyTaskType()
 
-                SendTroops(task['type'])
+                SendTroops(taskType)
                 time.sleep(SLEEP_TIME)
 
-                print(f"Task type: {task['type']}")
-                DeployTroops(task['type'])
+                print(f"Task type: {taskType}")
+                DeployTroops(taskType)
                 time.sleep(SLEEP_TIME)
 
                 # Always return to Intel screen after deploy
@@ -303,5 +291,25 @@ def HandleExplorationAttack():
         return
 
 
+def IdentifyTaskType():
+    """
+    After opening a task view, this checks which button is visible
+    to determine the task type.
+
+    Returns:
+        str: One of "rescue", "explore", "monster", or "unknown"
+    """
+    if FindOnScreen(img.btn_rescue):
+        print("Task type: Rescue")
+        return "rescue"
+    elif FindOnScreen(img.btn_explore):
+        print("Task type: Explore")
+        return "explore"
+    elif FindOnScreen(img.btn_attack):
+        print("Task type: Monster")
+        return "monster"
+    else:
+        print("Task type: Unknown")
+        return "unknown"
 
 

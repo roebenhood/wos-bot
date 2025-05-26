@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import pytesseract
 from PIL import Image
+from utils import image_paths as img
 
 from config import DEVICE_ID, SLEEP_TIME, WAIT_POLL, WAIT_TIMEOUT
 from utils.adb_utils import PressBack, Tap
@@ -15,6 +16,11 @@ device_id = DEVICE_ID
 def GetScreenshot():
     result = subprocess.run(['adb', '-s', device_id, 'exec-out', 'screencap', '-p'], capture_output=True)
     return Image.open(io.BytesIO(result.stdout))
+
+def GetScreenshotCV():
+    result = subprocess.run(['adb', 'exec-out', 'screencap', '-p'], capture_output=True)
+    image = Image.open(io.BytesIO(result.stdout))
+    return cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
 def FindTemplate(screen_img, template_path, threshold=0.8):
     if screen_img is None:
@@ -158,4 +164,66 @@ def ScreenHasText(keywords: list, screenshot=None) -> bool:
 
     text = ExtractText(screenshot)
     return any(word.lower() in text for word in keywords)
+
+
+def DetectNewTasks(baseline_path, threshold=40, min_area=500, ignore_y_range=(860, 960)):
+
+    baseline = cv2.imread(baseline_path, cv2.IMREAD_GRAYSCALE)
+    current = GetScreenshotCV()  # This should return a current screenshot in OpenCV format
+    current_gray = cv2.cvtColor(current, cv2.COLOR_BGR2GRAY)
+
+    # Ensure same size
+    if baseline.shape != current_gray.shape:
+        current_gray = cv2.resize(current_gray, (baseline.shape[1], baseline.shape[0]))
+
+    # Compute difference and threshold
+    diff = cv2.absdiff(current_gray, baseline)
+    _, thresh = cv2.threshold(diff, threshold, 255, cv2.THRESH_BINARY)
+
+    # Morphological clean-up
+    kernel = np.ones((5, 5), np.uint8)
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+
+    # Find contours of changes
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Filter and extract task positions
+    tasks = []
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area >= min_area:
+            x, y, w, h = cv2.boundingRect(cnt)
+            center_x = x + w // 2
+            center_y = y + h // 2
+
+            if ignore_y_range[0] <= center_y <= ignore_y_range[1]:
+                continue  # Skip ignored region
+
+            tasks.append((center_x, center_y))
+
+    return tasks
+
+
+def FindWithRetries(find_fn, label="element", attempts=3, delay=SLEEP_TIME):
+    """
+    Tries to locate something on screen with retries.
+
+    Args:
+        find_fn: A lambda or function returning coordinates or None.
+        label (str): Text to display while retrying.
+        attempts (int): Number of attempts before giving up.
+        delay (float): Delay between attempts.
+
+    Returns:
+        Found value or None
+    """
+    for attempt in range(1, attempts + 1):
+        result = find_fn()
+        if result:
+            print(f"{label} found on attempt {attempt}")
+            return result
+        print(f"{label} not found (attempt {attempt})")
+        time.sleep(delay)
+    print(f"{label} not found after {attempts} attempts.")
+    return None
 
